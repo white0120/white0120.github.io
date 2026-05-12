@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>打地鼠小游戏</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #121212;
+      color: #f5f5f5;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    .info {
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      grid-template-rows: repeat(4, 80px);
+      gap: 10px;
+    }
+    .cell {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+      background: #282c34;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+      user-select: none;
+    }
+    .cell:hover {
+      transform: scale(1.04);
+    }
+    .cell.active {
+      background: #ffb86c;
+      box-shadow: 0 0 15px rgba(255, 184, 108, 0.8);
+    }
+    .button-row {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      background: #50fa7b;
+      color: #111;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: #44e66d;
+    }
+  </style>
+</head>
+<body>
+  <h1>打地鼠小游戏</h1>
+  <div class="info">
+    <div>得分: <span id="score">0</span></div>
+    <div>剩余时间: <span id="time">20</span> 秒</div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="button-row">
+    <button id="startBtn">开始游戏</button>
+    <button id="resetBtn">重置</button>
+  </div>
+  <script>
+    const grid = document.getElementById('grid');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let cells = [];
+    let score = 0;
+    let timeLeft = 20;
+    let activeIndex = -1;
+    let intervalId = null;
+    let countdownId = null;
+    let running = false;
+
+    function createGrid() {
+      for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        cell.addEventListener('click', () => handleClick(i));
+        grid.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function setActive(index) {
+      if (activeIndex !== -1) {
+        cells[activeIndex].classList.remove('active');
+      }
+      activeIndex = index;
+      if (index !== -1) {
+        cells[index].classList.add('active');
+      }
+    }
+
+    function randomActive() {
+      const nextIndex = Math.floor(Math.random() * cells.length);
+      setActive(nextIndex);
+    }
+
+    function handleClick(index) {
+      if (!running) return;
+      if (index === activeIndex) {
+        score += 10;
+        scoreEl.textContent = score;
+        setActive(-1);
+      } else {
+        score = Math.max(0, score - 5);
+        scoreEl.textContent = score;
+      }
+    }
+
+    function startGame() {
+      if (running) return;
+      running = true;
+      score = 0;
+      timeLeft = 20;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      startBtn.textContent = '游戏进行中...';
+      startBtn.disabled = true;
+      randomActive();
+      intervalId = setInterval(randomActive, 900);
+      countdownId = setInterval(() => {
+        timeLeft -= 1;
+        timeEl.textContent = timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function endGame() {
+      running = false;
+      clearInterval(intervalId);
+      clearInterval(countdownId);
+      setActive(-1);
+      startBtn.textContent = '开始游戏';
+      startBtn.disabled = false;
+      alert(`游戏结束！你的得分：${score}`);
+    }
+
+    function resetGame() {
+      clearInterval(intervalId);
+      clearInterval(countdownId);
+      running = false;
+      score = 0;
+      timeLeft = 20;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      setActive(-1);
+      startBtn.textContent = '开始游戏';
+      startBtn.disabled = false;
+    }
+
+    startBtn.addEventListener('click', startGame);
+    resetBtn.addEventListener('click', resetGame);
+    createGrid();
+  </script>
+</body>
+</html>
